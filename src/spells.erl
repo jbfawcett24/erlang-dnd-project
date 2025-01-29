@@ -1,5 +1,5 @@
 -module(dnd_project).
--export([menu/0, get_spell_info/2, display_spell/0]).
+-export([spell_menu/0, get_spell_info/2, display_spell/0]).
 
 -define(SPELLS, [
     {"Fireball", 5, "A fiery spell that causes damage"},
@@ -12,7 +12,7 @@
     "Heal"
 ]).
 
-menu() ->
+spell_menu() ->
     % Spawn the display_spell process
     Pid = spawn(?MODULE, display_spell, []),
 
@@ -28,8 +28,9 @@ menu() ->
     % Prompt for user input
     io:format("Enter the spell number to view details: "),
     Input = string:trim(io:get_line("")),
-    get_spell_info(Pid, Input).
+    get_spell_info(Pid, Input),
     % No extra "end." at the end of the function
+    spell_menu().
 
 
 
