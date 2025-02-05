@@ -42,12 +42,7 @@ get_known_spells(SpellsPid) ->
 
 %%% Main Menu
 spell_menu() ->
-    SpellsPid = start_known_spells(),  % Start known spells process
-
-    io:format("Enter your character level: "),
-    Input = string:trim(io:get_line("")),
-    {Level, _} = string:to_integer(Input),
-    set_known_spells(SpellsPid, Level),  % Set spells based on level
+    SpellsPid = start_known_spells(),  % Start known spells process % Set spells based on level
 
     loop_menu(SpellsPid).  % Enter menu loop
 
