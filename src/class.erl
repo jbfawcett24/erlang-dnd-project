@@ -1,5 +1,5 @@
 -module(class).
--export([get_class/1, class_menu/0, display_class_info/1, get_ability_info/2, display_ability/0]).
+-export([get_class/1, class_menu/0, display_class_info/1, get_ability_info/2, display_ability/0, ability_menu/2]).
 
 -record(class, {
     name,
@@ -24,37 +24,60 @@
 ]).
 
 -spec class_menu() -> ok.
-class_menu() -> 
+class_menu() ->
     Pid = spawn(?MODULE, display_ability, []),
 
     io:format("Enter class name (e.g., barbarian, bard, cleric): "),
     Input = string:trim(io:get_line("")),
+
     case get_class(Input) of
         {error, unknown_class} ->
             io:format("Unknown class. Try again.~n"),
             class_menu();
         Class ->
+            io:format("Class record in class_menu: ~p~n", [Class]),
             display_class_info(Class),
             ability_menu(Pid, Class)
     end.
 
+
 -spec ability_menu(Pid :: pid(), Class :: #class{}) -> ok.
 ability_menu(Pid, Class) ->
+    io:format("Entering ability_menu with Class: ~p~n", [Class]),
+    io:format("Abilities List in ability_menu: ~p~n", [Class#class.abilities]),
+
     io:format("Enter the ability number to view details (or 'exit' to return to class selection): "),
-    AbilityInput = string:trim(io:get_line("")),
-    case AbilityInput of
+    RawInput = io:get_line(""),
+    TrimmedInput = string:trim(RawInput),
+
+    io:format("Raw Input: ~p~n", [RawInput]),
+    io:format("Trimmed Input: ~p~n", [TrimmedInput]),
+
+    case TrimmedInput of
         "exit" -> class_menu();
         _ ->
-            case string:to_integer(AbilityInput) of
+            case string:to_integer(TrimmedInput) of
                 {ok, Index} when Index >= 1, Index =< length(Class#class.abilities) ->
-                    {AbilityName, _Level} = lists:nth(Index, Class#class.abilities),
-                    get_ability_info(Pid, AbilityName),
+                    case lists:nth(Index, Class#class.abilities) of
+                        {AbilityName, _Level} = AbilityTuple ->  % Explicitly bind and match
+                            io:format("Selected Ability: ~p~n", [AbilityTuple]),
+                            get_ability_info(Pid, AbilityName),
+                            ability_menu(Pid, Class);
+                        _Other ->
+                            io:format("Unexpected Error: Invalid ability format: ~p~n", [_Other]),
+                            ability_menu(Pid, Class)
+                    end;
+                {ok, _} ->
+                    io:format("Invalid number. Try again.~n"),
                     ability_menu(Pid, Class);
-                _ ->
-                    io:format("Invalid input. Please try again.~n"),
+                {error, _} ->
+                    io:format("Invalid input. Enter a number.~n"),
                     ability_menu(Pid, Class)
             end
     end.
+
+
+
 
 -spec display_class_info(Class :: #class{}) -> ok.
 display_class_info(Class) ->
